@@ -6,7 +6,7 @@
 /*   By: amarzial <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2016/11/26 20:10:49 by amarzial          #+#    #+#             */
-/*   Updated: 2016/11/29 16:47:22 by amarzial         ###   ########.fr       */
+/*   Updated: 2016/11/29 16:51:24 by amarzial         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,7 +48,7 @@ int		get_next_line(const int fd, char **line)
 	while (!(rdr.eol = ft_memchr(rdr.buffer, '\n', rdr.r_size)) && !rdr.stop)
 	{
 		if (rdr.r_size == rdr.b_size)
-			if(!buffalloc(&rdr))
+			if (!buffalloc(&rdr))
 				return (-1);
 		cnt = read(fd, rdr.buffer + rdr.r_size, rdr.b_size - rdr.r_size);
 		if (cnt == 0)
