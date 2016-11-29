@@ -6,7 +6,7 @@
 /*   By: amarzial <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2016/11/26 20:10:49 by amarzial          #+#    #+#             */
-/*   Updated: 2016/11/29 16:51:24 by amarzial         ###   ########.fr       */
+/*   Updated: 2016/11/29 16:56:42 by amarzial         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,26 +41,29 @@ int		buffalloc(t_reader *rdr)
 
 int		get_next_line(const int fd, char **line)
 {
-	static t_reader	rdr;
+	static t_reader	file_readers[MAX_FILES];
+	t_reader		*rdr;
 	int				cnt;
 
-	resetbuff(&rdr);
-	while (!(rdr.eol = ft_memchr(rdr.buffer, '\n', rdr.r_size)) && !rdr.stop)
+	rdr = &(file_readers[fd]);
+	resetbuff(rdr);
+	while (!(rdr->eol = ft_memchr(rdr->buffer, '\n', rdr->r_size)) && \
+	!rdr->stop)
 	{
-		if (rdr.r_size == rdr.b_size)
-			if (!buffalloc(&rdr))
+		if (rdr->r_size == rdr->b_size)
+			if (!buffalloc(rdr))
 				return (-1);
-		cnt = read(fd, rdr.buffer + rdr.r_size, rdr.b_size - rdr.r_size);
+		cnt = read(fd, rdr->buffer + rdr->r_size, rdr->b_size - rdr->r_size);
 		if (cnt == 0)
-			rdr.stop = 1;
+			rdr->stop = 1;
 		else if (cnt < 0)
 			return (-1);
-		rdr.r_size += cnt;
+		rdr->r_size += cnt;
 	}
-	if (rdr.stop)
+	if (rdr->stop)
 		return (0);
-	if (!(*line = ft_strnew(rdr.eol - rdr.buffer)))
+	if (!(*line = ft_strnew(rdr->eol - rdr->buffer)))
 		return (-1);
-	ft_memcpy(*line, rdr.buffer, rdr.eol - rdr.buffer);
+	ft_memcpy(*line, rdr->buffer, rdr->eol - rdr->buffer);
 	return (1);
 }
