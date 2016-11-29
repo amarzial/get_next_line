@@ -6,7 +6,7 @@
 /*   By: amarzial <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2016/11/26 20:10:49 by amarzial          #+#    #+#             */
-/*   Updated: 2016/11/29 15:44:30 by amarzial         ###   ########.fr       */
+/*   Updated: 2016/11/29 16:47:22 by amarzial         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,27 +17,25 @@
 
 void	resetbuff(t_reader *rdr)
 {
-	int		size;
+	int		chunksize;
 
 	if (!rdr->buffer)
 		return ;
-	size = rdr->size - (rdr->eol - rdr->buffer + 1);
-	ft_memmove(rdr->buffer, rdr->eol + 1, size);
-	rdr->start = rdr->buffer + size;
-	ft_memset(rdr->start, 0, rdr->size - size);
+	chunksize = (rdr->buffer + rdr->r_size) - (rdr->eol + 1);
+	ft_memmove(rdr->buffer, rdr->eol + 1, chunksize);
+	rdr->r_size = chunksize;
 }
 
-int		buffalloc(char **buff,char **start, int *size)
+int		buffalloc(t_reader *rdr)
 {
 	char	*tmp;
 
-	if (!(tmp = (char*)malloc(*size + BUFF_SIZE)))
+	if (!(tmp = (char*)malloc(rdr->b_size + BUFF_SIZE)))
 		return (0);
-	ft_memcpy(tmp, *buff, *size);
-	*start = tmp + *size;
-	*size += BUFF_SIZE;
-	ft_memdel((void**)buff);
-	*buff = tmp;
+	ft_memcpy(tmp, rdr->buffer, rdr->b_size);
+	rdr->b_size += BUFF_SIZE;
+	ft_memdel((void**)&rdr->buffer);
+	rdr->buffer = tmp;
 	return (1);
 }
 
@@ -47,20 +45,21 @@ int		get_next_line(const int fd, char **line)
 	int				cnt;
 
 	resetbuff(&rdr);
-	if (!rdr.buffer && !(rdr.buffer = (char*)malloc(BUFF_SIZE)))
-		return (-1);
-	while (!(rdr.eol = ft_memchr(rdr.buffer, '\n', rdr.size)) && !rdr.stop)
+	while (!(rdr.eol = ft_memchr(rdr.buffer, '\n', rdr.r_size)) && !rdr.stop)
 	{
-		if (!buffalloc(&rdr.buffer, &rdr.start, &rdr.size))
+		if (rdr.r_size == rdr.b_size)
+			if(!buffalloc(&rdr))
+				return (-1);
+		cnt = read(fd, rdr.buffer + rdr.r_size, rdr.b_size - rdr.r_size);
+		if (cnt == 0)
+			rdr.stop = 1;
+		else if (cnt < 0)
 			return (-1);
-		cnt = 0;
-		while ((rdr.cnt = read(fd, rdr.start + cnt, BUFF_SIZE - cnt)) > 0)
-			cnt += rdr.cnt ;
-		if (cnt < BUFF_SIZE)
-			rdr.stop = rdr.start + cnt;
+		rdr.r_size += cnt;
 	}
-	rdr.eol = (rdr.eol) ? rdr.eol : rdr.stop;
-	if (!(*line = (char*)ft_strnew(rdr.eol - rdr.buffer)))
+	if (rdr.stop)
+		return (0);
+	if (!(*line = ft_strnew(rdr.eol - rdr.buffer)))
 		return (-1);
 	ft_memcpy(*line, rdr.buffer, rdr.eol - rdr.buffer);
 	return (1);
