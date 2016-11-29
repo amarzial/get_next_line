@@ -6,7 +6,7 @@
 /*   By: amarzial <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2016/11/26 20:10:49 by amarzial          #+#    #+#             */
-/*   Updated: 2016/11/29 16:56:42 by amarzial         ###   ########.fr       */
+/*   Updated: 2016/11/29 20:47:12 by amarzial         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,10 +30,10 @@ int		buffalloc(t_reader *rdr)
 {
 	char	*tmp;
 
-	if (!(tmp = (char*)malloc(rdr->b_size + BUFF_SIZE)))
+	if (!(tmp = (char*)malloc(rdr->r_size + BUFF_SIZE)))
 		return (0);
-	ft_memcpy(tmp, rdr->buffer, rdr->b_size);
-	rdr->b_size += BUFF_SIZE;
+	ft_memcpy(tmp, rdr->buffer, rdr->r_size);
+	rdr->b_size = rdr->r_size + BUFF_SIZE;
 	ft_memdel((void**)&rdr->buffer);
 	rdr->buffer = tmp;
 	return (1);
@@ -50,10 +50,10 @@ int		get_next_line(const int fd, char **line)
 	while (!(rdr->eol = ft_memchr(rdr->buffer, '\n', rdr->r_size)) && \
 	!rdr->stop)
 	{
-		if (rdr->r_size == rdr->b_size)
+		if ((rdr->b_size - rdr->r_size) < BUFF_SIZE)
 			if (!buffalloc(rdr))
 				return (-1);
-		cnt = read(fd, rdr->buffer + rdr->r_size, rdr->b_size - rdr->r_size);
+		cnt = read(fd, rdr->buffer + rdr->r_size, BUFF_SIZE);
 		if (cnt == 0)
 			rdr->stop = 1;
 		else if (cnt < 0)
