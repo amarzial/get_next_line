@@ -46,6 +46,8 @@ int		get_next_line(const int fd, char **line)
 	t_reader		*rdr;
 	int				cnt;
 
+	if (fd < 0 || !line)
+		return (-1);
 	rdr = &(file_readers[fd]);
 	resetbuff(rdr);
 	while (!(rdr->eol = ft_memchr(rdr->buffer, '\n', rdr->r_size)) && \
@@ -62,10 +64,12 @@ int		get_next_line(const int fd, char **line)
 		rdr->r_size += cnt;
 	}
 	if (rdr->stop)
+	{
 		if (rdr->r_size)
 			rdr->eol = rdr->buffer + rdr->r_size;
 		else
 			return (0);
+	}
 	if (!(*line = ft_strnew(rdr->eol - rdr->buffer)))
 		return (-1);
 	ft_memcpy(*line, rdr->buffer, rdr->eol - rdr->buffer);
