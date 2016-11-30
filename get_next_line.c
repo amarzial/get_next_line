@@ -6,7 +6,7 @@
 /*   By: amarzial <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2016/11/26 20:10:49 by amarzial          #+#    #+#             */
-/*   Updated: 2016/11/29 20:47:12 by amarzial         ###   ########.fr       */
+/*   Updated: 2016/11/30 12:40:41 by amarzial         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,9 +19,10 @@ void	resetbuff(t_reader *rdr)
 {
 	int		chunksize;
 
-	if (!rdr->buffer)
+	if (!rdr->buffer || (rdr->stop && !rdr->r_size))
 		return ;
-	chunksize = (rdr->buffer + rdr->r_size) - (rdr->eol + 1);
+	chunksize = (rdr->buffer + rdr->r_size) - (rdr->eol);
+	chunksize -= (rdr->stop) ? 0 : 1;
 	ft_memmove(rdr->buffer, rdr->eol + 1, chunksize);
 	rdr->r_size = chunksize;
 }
@@ -61,7 +62,10 @@ int		get_next_line(const int fd, char **line)
 		rdr->r_size += cnt;
 	}
 	if (rdr->stop)
-		return (0);
+		if (rdr->r_size)
+			rdr->eol = rdr->buffer + rdr->r_size;
+		else
+			return (0);
 	if (!(*line = ft_strnew(rdr->eol - rdr->buffer)))
 		return (-1);
 	ft_memcpy(*line, rdr->buffer, rdr->eol - rdr->buffer);
